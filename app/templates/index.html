@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Music Breakdown</title>
+</head>
+<body>
+    <h1>Upload Audio File</h1>
+    <form action="/separate" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" accept="audio/*" required>
+        <button type="submit">Separate</button>
+    </form>
+</body>
+</html>
