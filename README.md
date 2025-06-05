@@ -19,3 +19,9 @@ uvicorn app.main:app --reload
 ```
 
 Then open `http://localhost:8000` in your browser to upload an audio file. The separated stems will be returned as a zip archive.
+
+### Troubleshooting
+
+If you receive an HTTP 502 error when submitting a file, make sure that the
+`demucs` command is installed and accessible. The server surfaces any Demucs
+error messages in the response body.

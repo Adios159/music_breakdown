@@ -2,10 +2,9 @@ import os
 import shutil
 import subprocess
 import uuid
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, HTTPException, Request
 from fastapi.responses import FileResponse
 from fastapi.templating import Jinja2Templates
-from fastapi import Request
 
 app = FastAPI()
 templates = Jinja2Templates(directory="app/templates")
@@ -14,7 +13,8 @@ OUTPUT_DIR = "outputs"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 @app.get("/")
-def index(request: Request):
+async def index(request: Request):
+    """Render the upload form."""
     return templates.TemplateResponse("index.html", {"request": request})
 
 @app.post("/separate")
@@ -36,10 +36,21 @@ async def separate(file: UploadFile = File(...)):
         input_path
     ]
     try:
-        subprocess.run(command, check=True)
-    except Exception as e:
-        return {"error": str(e)}
+        completed = subprocess.run(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError as exc:
+        # Surface demucs errors to the client
+        raise HTTPException(status_code=502, detail=exc.stderr.strip())
 
     # Compress results for download
-    archive_path = shutil.make_archive(stem_out, 'zip', stem_out)
-    return FileResponse(archive_path, filename=f"{file.filename}_stems.zip")
+    archive_path = shutil.make_archive(stem_out, "zip", stem_out)
+    return FileResponse(
+        archive_path,
+        filename=f"{file.filename}_stems.zip",
+        media_type="application/zip",
+    )
